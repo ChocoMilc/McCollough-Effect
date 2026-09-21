@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DVD x McCollough</title>
+<title>McCollough</title>
 <style>
   html, body {
     margin: 0;
@@ -24,13 +24,10 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 210px;      /* logo size; height follows aspect ratio */
+    width: 210px;      
     height: auto;
     will-change: transform;
     pointer-events: none;
-    /* Turn the (black) logo solid white, then wrap it in a black outline.
-       brightness(0) -> pure black, invert(1) -> pure white,
-       then four 1px black drop-shadows in each direction form the outline. */
     filter:
       brightness(0) invert(1)
       drop-shadow(2px 0 0 #000)
@@ -38,7 +35,7 @@
       drop-shadow(0 2px 0 #000)
       drop-shadow(0 -2px 0 #000);
   }
-  /* Fallback logo, shown only if the online image can't load */
+  
   #fallback {
     display: none;
     position: fixed;
@@ -76,11 +73,11 @@
 
   const GREEN = '#01ff00';
   const MAGENTA = '#ff00ff';
-  const LINE_W = 6;      // black line thickness (px)
-  const GAP_W = 6;       // infill gap thickness (px)
-  const INTERVAL = 4000; // ms between swaps
+  const LINE_W = 6;      
+  const GAP_W = 6;       
+  const INTERVAL = 4000;
 
-  let mode = 0; // 0 = vertical black on green, 1 = horizontal black on magenta
+  let mode = 0;
 
   function drawBg() {
     const dpr = window.devicePixelRatio || 1;
@@ -106,7 +103,7 @@
   setInterval(() => { mode = 1 - mode; drawBg(); }, INTERVAL);
   window.addEventListener('resize', drawBg);
 
-  // ---------- Bouncing DVD logo ----------
+  
   const img = document.getElementById('dvd');
   const fallback = document.getElementById('fallback');
   let logo = img;
@@ -119,7 +116,6 @@
 
   img.addEventListener('load', measure);
   img.addEventListener('error', () => {
-    // Online image unavailable -> switch to the built-in vector logo
     img.style.display = 'none';
     fallback.style.display = 'block';
     logo = fallback;
