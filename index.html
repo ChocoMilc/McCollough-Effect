@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DVD x McCollough</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+  #bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #dvd {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 210px;      /* logo size; height follows aspect ratio */
+    height: auto;
+    will-change: transform;
+    pointer-events: none;
+    /* Turn the (black) logo solid white, then wrap it in a black outline.
+       brightness(0) -> pure black, invert(1) -> pure white,
+       then four 1px black drop-shadows in each direction form the outline. */
+    filter:
+      brightness(0) invert(1)
+      drop-shadow(2px 0 0 #000)
+      drop-shadow(-2px 0 0 #000)
+      drop-shadow(0 2px 0 #000)
+      drop-shadow(0 -2px 0 #000);
+  }
+  /* Fallback logo, shown only if the online image can't load */
+  #fallback {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<img id="dvd" alt="DVD logo"
+     src="https://upload.wikimedia.org/wikipedia/commons/9/9b/DVD_logo.svg">
+
+<!-- Fallback vector logo (used only if the image above fails to load) -->
+<svg id="fallback" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 107" width="210" height="107">
+  <g fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="round" paint-order="stroke fill">
+    <text x="105" y="62" text-anchor="middle"
+          font-family="Arial Black, Impact, Helvetica, sans-serif"
+          font-weight="900" font-size="64" letter-spacing="-2"
+          stroke-width="4">DVD</text>
+    <ellipse cx="105" cy="88" rx="86" ry="14"/>
+    <ellipse cx="105" cy="88" rx="16" ry="4.5" fill="#000" stroke="none"/>
+  </g>
+</svg>
+
+<script>
+(() => {
+  // ---------- McCollough background ----------
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+
+  const GREEN = '#01ff00';
+  const MAGENTA = '#ff00ff';
+  const LINE_W = 6;      // black line thickness (px)
+  const GAP_W = 6;       // infill gap thickness (px)
+  const INTERVAL = 4000; // ms between swaps
+
+  let mode = 0; // 0 = vertical black on green, 1 = horizontal black on magenta
+
+  function drawBg() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.fillStyle = mode === 0 ? GREEN : MAGENTA;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = '#000';
+    const step = LINE_W + GAP_W;
+    if (mode === 0) {
+      for (let x = 0; x < w; x += step) ctx.fillRect(x, 0, LINE_W, h);
+    } else {
+      for (let y = 0; y < h; y += step) ctx.fillRect(0, y, w, LINE_W);
+    }
+  }
+
+  drawBg();
+  setInterval(() => { mode = 1 - mode; drawBg(); }, INTERVAL);
+  window.addEventListener('resize', drawBg);
+
+  // ---------- Bouncing DVD logo ----------
+  const img = document.getElementById('dvd');
+  const fallback = document.getElementById('fallback');
+  let logo = img;
+  let LW = 210, LH = 107;
+
+  function measure() {
+    const r = logo.getBoundingClientRect();
+    if (r.width && r.height) { LW = r.width; LH = r.height; }
+  }
+
+  img.addEventListener('load', measure);
+  img.addEventListener('error', () => {
+    // Online image unavailable -> switch to the built-in vector logo
+    img.style.display = 'none';
+    fallback.style.display = 'block';
+    logo = fallback;
+    LW = 210; LH = 107;
+  });
+  if (img.complete && img.naturalWidth) measure();
+
+  let x = Math.random() * Math.max(1, window.innerWidth - LW);
+  let y = Math.random() * Math.max(1, window.innerHeight - LH);
+  const speed = 180; // px/sec
+  const angle = (Math.random() * 0.5 + 0.25) * Math.PI / 2;
+  let vx = Math.cos(angle) * speed * (Math.random() < 0.5 ? -1 : 1);
+  let vy = Math.sin(angle) * speed * (Math.random() < 0.5 ? -1 : 1);
+
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+
+    const maxX = window.innerWidth - LW;
+    const maxY = window.innerHeight - LH;
+
+    x += vx * dt;
+    y += vy * dt;
+
+    if (x <= 0)    { x = 0;    vx =  Math.abs(vx); }
+    if (x >= maxX) { x = maxX; vx = -Math.abs(vx); }
+    if (y <= 0)    { y = 0;    vy =  Math.abs(vy); }
+    if (y >= maxY) { y = maxY; vy = -Math.abs(vy); }
+
+    logo.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
